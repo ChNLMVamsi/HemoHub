@@ -22,6 +22,10 @@ urlpatterns = [
     path("profile/", views.profile, name="profile"),
 
     path("oversight/", views.oversight, name="oversight"),
+    path("oversight/sweep/", views.oversight_sweep, name="oversight_sweep"),
+    path("oversight/seed/", views.oversight_seed, name="oversight_seed"),
+    path("oversight/bank/<int:pk>/delete/", views.oversight_delete_bank, name="oversight_delete_bank"),
+    path("oversight/unit/<int:pk>/broadcast/", views.oversight_broadcast, name="oversight_broadcast"),
 
     path("api/alerts/count/", views.alerts_count, name="alerts_count"),
     path("api/cron/expire/", views.cron_expire, name="cron_expire"),

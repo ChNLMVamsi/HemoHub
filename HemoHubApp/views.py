@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
+from django.core.management import call_command
 from django.db.models import Count, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -361,6 +362,14 @@ def oversight(request):
     recent = (alerts.select_related("unit", "from_bank", "claimed_by")
                     .order_by("-created_at")[:8])
 
+    # Units expiring within 7 days that no one has listed yet — the admin can
+    # broadcast them to the network on the owning bank's behalf.
+    needs_action = (available.filter(expiry_date__gte=today,
+                                     expiry_date__lte=today + timedelta(days=7))
+                             .exclude(alerts__status="OPEN")
+                             .select_related("bank")
+                             .order_by("expiry_date")[:20])
+
     ctx = {
         "total_banks": BloodBank.objects.count(),
         "total_units": available.count(),
@@ -373,8 +382,60 @@ def oversight(request):
         "by_type": by_type,
         "banks": banks,
         "recent": recent,
+        "needs_action": needs_action,
     }
     return render(request, "oversight.html", ctx)
+
+
+@superuser_required
+@require_POST
+def oversight_sweep(request):
+    n = run_expiry_sweep()
+    messages.success(request, f"Expiry sweep complete — {n} unit(s) retired from stock.")
+    return redirect("oversight")
+
+
+@superuser_required
+@require_POST
+def oversight_seed(request):
+    call_command("seed_demo")
+    messages.success(request, "Demo data reset — banks and dated stock repopulated.")
+    return redirect("oversight")
+
+
+@superuser_required
+@require_POST
+def oversight_delete_bank(request, pk):
+    bank = get_object_or_404(BloodBank, pk=pk)
+    name, user = bank.name, bank.user
+    bank.delete()                       # cascades units + alerts
+    if user and not user.is_superuser:
+        user.delete()
+    messages.info(request, f"Removed blood bank '{name}' and its data.")
+    return redirect("oversight")
+
+
+@superuser_required
+@require_POST
+def oversight_broadcast(request, pk):
+    unit = get_object_or_404(BloodUnit, pk=pk, is_available=True)
+    if unit.has_open_alert:
+        messages.info(request, "That unit is already on the network.")
+    else:
+        alert = TransferAlert.objects.create(
+            unit=unit, from_bank=unit.bank,
+            note=f"{unit.blood_type} {unit.get_component_display()} · "
+                 f"{unit.days_to_expiry} days left (listed by admin)",
+        )
+        push_network_event({
+            "event": "new_alert", "from_bank_id": unit.bank_id,
+            "from_bank": unit.bank.name, "blood_type": unit.blood_type,
+            "component": unit.get_component_display(), "alert_id": alert.id,
+        })
+        messages.success(request,
+            f"Broadcast {unit.bank.name}'s {unit.blood_type} "
+            f"{unit.get_component_display()} to the network.")
+    return redirect("oversight")
 
 
 def cron_expire(request):
