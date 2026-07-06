@@ -1,0 +1,63 @@
+# Render blueprint — deploys the whole stack from one file.
+# Free plan: web service (with WebSockets) + Postgres + Key Value (Redis).
+# The daily expiry sweep runs via a scheduled ping (see .github/workflows),
+# so no paid background worker is required.
+
+databases:
+  - name: hemohub-db
+    plan: free
+
+services:
+  - type: keyvalue          # Redis: Channels layer + Celery broker
+    name: hemohub-redis
+    plan: free
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+  - type: web
+    name: hemohub
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
+    startCommand: "daphne -b 0.0.0.0 -p $PORT HemoHubProject.asgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CRON_SECRET
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.12.4"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hemohub-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: hemohub-redis
+          type: keyvalue
+          property: connectionString
+
+  # ---- Optional paid upgrade: real 24/7 Celery worker + beat -----------------
+  # Uncomment these to run Celery on Render (each ~$7/mo). Not needed for free.
+  # - type: worker
+  #   name: hemohub-worker
+  #   runtime: python
+  #   plan: starter
+  #   buildCommand: "pip install -r requirements.txt"
+  #   startCommand: "celery -A HemoHubProject worker --loglevel=info"
+  #   envVars:
+  #     - key: REDIS_URL
+  #       fromService: { name: hemohub-redis, type: keyvalue, property: connectionString }
+  #     - key: DATABASE_URL
+  #       fromDatabase: { name: hemohub-db, property: connectionString }
+  # - type: worker
+  #   name: hemohub-beat
+  #   runtime: python
+  #   plan: starter
+  #   buildCommand: "pip install -r requirements.txt"
+  #   startCommand: "celery -A HemoHubProject beat --loglevel=info"
+  #   envVars:
+  #     - key: REDIS_URL
+  #       fromService: { name: hemohub-redis, type: keyvalue, property: connectionString }

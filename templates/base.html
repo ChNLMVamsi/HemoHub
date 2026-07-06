@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  {% include "_head.html" %}
+  <title>{% block title %}HemoHub{% endblock %}</title>
+</head>
+<body class="h-full bg-slate-50 font-sans text-slate-800 antialiased">
+<div class="flex min-h-full">
+  <!-- Sidebar -->
+  <aside class="hidden md:flex md:w-64 md:flex-col bg-ink text-slate-300">
+    <div class="flex items-center gap-2 px-6 py-5 border-b border-white/10">
+      <span class="grid h-8 w-8 place-items-center rounded-lg bg-crimson font-display font-bold text-white">H</span>
+      <span class="font-display text-lg font-semibold text-white">HemoHub</span>
+    </div>
+    <nav class="flex-1 space-y-1 px-3 py-4 text-sm">
+      {% url 'dashboard' as u %}<a href="{{ u }}" class="flex items-center rounded-lg px-3 py-2 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">Dashboard</a>
+      {% url 'inventory' as u %}<a href="{{ u }}" class="flex items-center rounded-lg px-3 py-2 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">Inventory</a>
+      {% url 'network' as u %}<a href="{{ u }}" class="flex items-center justify-between rounded-lg px-3 py-2 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">
+        <span>Network</span>
+        <span id="net-badge" class="{% if open_alerts %}inline-flex{% else %}hidden{% endif %} min-w-5 items-center justify-center rounded-full bg-crimson px-1.5 text-xs font-semibold text-white">{{ open_alerts }}</span>
+      </a>
+      {% url 'profile' as u %}<a href="{{ u }}" class="flex items-center rounded-lg px-3 py-2 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">Profile</a>
+    </nav>
+    <div class="border-t border-white/10 px-4 py-4">
+      <div class="mb-2 text-sm">
+        <div class="font-medium text-white">{{ request.user.bloodbank.name }}</div>
+        <div class="text-xs text-slate-400">{{ request.user.username }}</div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+        <button class="w-full rounded-lg border border-white/15 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/5">Sign out</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="flex-1">
+    <!-- Mobile top bar -->
+    <header class="flex items-center justify-between border-b border-slate-200 bg-ink px-4 py-3 text-white md:hidden">
+      <div class="flex items-center gap-2">
+        <span class="grid h-7 w-7 place-items-center rounded-md bg-crimson font-display text-sm font-bold text-white">H</span>
+        <span class="font-display font-semibold">HemoHub</span>
+      </div>
+      <button id="drawer-open" aria-label="Open menu" class="relative rounded-md p-1.5 hover:bg-white/10">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        {% if open_alerts %}<span class="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-crimson"></span>{% endif %}
+      </button>
+    </header>
+
+    <!-- Mobile drawer -->
+    <div id="drawer" class="fixed inset-0 z-40 hidden md:hidden">
+      <div id="drawer-overlay" class="absolute inset-0 bg-slate-900/50"></div>
+      <aside class="absolute right-0 top-0 flex h-full w-72 flex-col bg-ink text-slate-300 shadow-xl">
+        <div class="flex items-center justify-between border-b border-white/10 px-5 py-4">
+          <span class="font-display text-lg font-semibold text-white">Menu</span>
+          <button id="drawer-close" aria-label="Close menu" class="rounded-md p-1 hover:bg-white/10">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <nav class="flex-1 space-y-1 px-3 py-4 text-sm">
+          {% url 'dashboard' as u %}<a href="{{ u }}" class="block rounded-lg px-3 py-2.5 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">Dashboard</a>
+          {% url 'inventory' as u %}<a href="{{ u }}" class="block rounded-lg px-3 py-2.5 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">Inventory</a>
+          {% url 'network' as u %}<a href="{{ u }}" class="flex items-center justify-between rounded-lg px-3 py-2.5 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">
+            <span>Network</span>
+            <span class="{% if open_alerts %}inline-flex{% else %}hidden{% endif %} min-w-5 items-center justify-center rounded-full bg-crimson px-1.5 text-xs font-semibold text-white">{{ open_alerts }}</span>
+          </a>
+          {% url 'profile' as u %}<a href="{{ u }}" class="block rounded-lg px-3 py-2.5 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">Profile</a>
+        </nav>
+        <div class="border-t border-white/10 px-4 py-4">
+          <div class="mb-2 text-sm"><div class="font-medium text-white">{{ request.user.bloodbank.name }}</div><div class="text-xs text-slate-400">{{ request.user.username }}</div></div>
+          <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+            <button class="w-full rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-200 hover:bg-white/5">Sign out</button>
+          </form>
+        </div>
+      </aside>
+    </div>
+
+    <main id="app-main" class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+      {% if messages %}
+        <div class="mb-5 space-y-2">
+          {% for m in messages %}
+            <div class="rounded-lg border px-4 py-3 text-sm
+              {% if m.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-800
+              {% elif m.tags == 'error' %}border-crimson/30 bg-crimson/5 text-crimson-700
+              {% elif m.tags == 'warning' %}border-amber-200 bg-amber-50 text-amber-800
+              {% else %}border-slate-200 bg-white text-slate-700{% endif %}">{{ m }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<!-- Live toast host -->
+<div id="toast-host" class="pointer-events-none fixed bottom-4 right-4 z-50 space-y-2"></div>
+<script>
+  const myBankId = {{ request.user.bloodbank.id|default:"0" }};
+
+  async function refreshBadge() {
+    try {
+      const r = await fetch("{% url 'alerts_count' %}");
+      const { open_alerts } = await r.json();
+      const b = document.getElementById('net-badge');
+      if (!b) return;
+      b.textContent = open_alerts;
+      b.classList.toggle('hidden', !open_alerts);
+      b.classList.toggle('inline-flex', !!open_alerts);
+    } catch (e) {}
+  }
+
+  function toast(msg) {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+    const el = document.createElement('div');
+    el.className = 'pointer-events-auto rounded-lg border border-crimson/30 bg-white px-4 py-3 text-sm text-slate-800 shadow-lg';
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(() => el.remove(), 6000);
+  }
+
+  // Refresh the main content in place (no full reload) when live stock events fire.
+  let refreshT = null;
+  function softRefreshMain() {
+    clearTimeout(refreshT);
+    refreshT = setTimeout(async () => {
+      try {
+        const res = await fetch(location.href, { headers: { 'X-Requested-With': 'fetch' } });
+        if (!res.ok) return;
+        const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        const fresh = doc.getElementById('app-main');
+        const cur = document.getElementById('app-main');
+        if (fresh && cur) cur.innerHTML = fresh.innerHTML;
+      } catch (e) {}
+    }, 400);
+  }
+
+  // Live network feed over WebSocket (Channels + Redis). Falls back to polling.
+  (function connectWS() {
+    try {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      const ws = new WebSocket(`${proto}://${location.host}/ws/network/`);
+      ws.onmessage = (e) => {
+        const d = JSON.parse(e.data);
+        refreshBadge();
+        if (d.event === 'new_alert' && d.from_bank_id !== myBankId) {
+          toast(`New on the network: ${d.blood_type} ${d.component} from ${d.from_bank}`);
+        }
+        // stock-changing events update the dashboard / inventory / network live
+        if (d.event === 'new_alert' || d.event === 'claimed' || d.event === 'sweep') {
+          softRefreshMain();
+        }
+      };
+      ws.onclose = () => setTimeout(connectWS, 5000);  // auto-reconnect
+    } catch (e) {}
+  })();
+
+  setInterval(refreshBadge, 20000);  // safety-net poll
+
+  // Mobile drawer
+  const drawer = document.getElementById('drawer');
+  const openBtn = document.getElementById('drawer-open');
+  const closeEls = [document.getElementById('drawer-close'), document.getElementById('drawer-overlay')];
+  if (openBtn) openBtn.addEventListener('click', () => drawer.classList.remove('hidden'));
+  closeEls.forEach(el => el && el.addEventListener('click', () => drawer.classList.add('hidden')));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawer) drawer.classList.add('hidden'); });
+</script>
+</body>
+</html>

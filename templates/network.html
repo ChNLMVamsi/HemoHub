@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Network · HemoHub{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h1 class="font-display text-2xl font-semibold text-ink">Transfer network</h1>
+  <p class="text-sm text-slate-500">Expiring units other banks have listed — claim what you can use before it's wasted.</p>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-2">
+  <!-- Incoming -->
+  <section class="rounded-xl border border-slate-200 bg-white">
+    <div class="border-b border-slate-100 px-5 py-4">
+      <h2 class="font-display font-semibold text-ink">Available to claim</h2>
+    </div>
+    {% if incoming %}
+    <ul class="divide-y divide-slate-100">
+      {% for a in incoming %}
+      <li class="flex items-center gap-4 px-5 py-3">
+        <span class="grid h-10 w-12 place-items-center rounded-lg bg-slate-100 font-display text-sm font-bold text-ink">{{ a.unit.blood_type }}</span>
+        <div class="min-w-0 flex-1">
+          <div class="text-sm font-medium text-slate-800">{{ a.unit.get_component_display }} · {{ a.unit.quantity_ml }} ml</div>
+          <div class="text-xs text-slate-500">{{ a.from_bank.name }}{% if a.from_bank.city %}, {{ a.from_bank.city }}{% endif %} · expires {{ a.unit.expiry_date }}</div>
+        </div>
+        <form method="post" action="{% url 'claim_alert' a.pk %}">{% csrf_token %}
+          <button class="rounded-lg bg-crimson px-3 py-1.5 text-xs font-semibold text-white hover:bg-crimson-700">Claim</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="px-5 py-10 text-center text-sm text-slate-500">Nothing on the network right now.</div>
+    {% endif %}
+  </section>
+
+  <!-- Outgoing -->
+  <section class="rounded-xl border border-slate-200 bg-white">
+    <div class="border-b border-slate-100 px-5 py-4">
+      <h2 class="font-display font-semibold text-ink">Your broadcasts</h2>
+    </div>
+    {% if outgoing %}
+    <ul class="divide-y divide-slate-100">
+      {% for a in outgoing %}
+      <li class="flex items-center gap-4 px-5 py-3">
+        <span class="grid h-10 w-12 place-items-center rounded-lg bg-slate-100 font-display text-sm font-bold text-ink">{{ a.unit.blood_type }}</span>
+        <div class="min-w-0 flex-1">
+          <div class="text-sm font-medium text-slate-800">{{ a.unit.get_component_display }} · {{ a.unit.quantity_ml }} ml</div>
+          <div class="text-xs text-slate-500">listed {{ a.created_at|date:"M j" }}{% if a.claimed_by %} · claimed by {{ a.claimed_by.name }}{% endif %}</div>
+        </div>
+        {% if a.status == 'OPEN' %}<span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">Open</span>
+        {% elif a.status == 'CLAIMED' %}<span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">Claimed</span>
+        {% else %}<span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">Expired</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="px-5 py-10 text-center text-sm text-slate-500">You haven't broadcast any units. Do it from <a href="{% url 'inventory' %}" class="text-crimson hover:underline">Inventory</a>.</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

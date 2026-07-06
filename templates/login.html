@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  {% include "_head.html" %}
+  {% include "partials/auth_styles.html" %}
+  <title>Sign in · HemoHub</title>
+  <style>
+    .pw-wrap{ position:relative; }
+    .pw-wrap input{ padding-right:2.6rem !important; }
+    .pw-toggle{ position:absolute; top:50%; right:.5rem; transform:translateY(-50%);
+      display:inline-flex; align-items:center; justify-content:center; color:var(--muted);
+      padding:.25rem; border-radius:6px; background:transparent; transition:color .15s ease; }
+    .pw-toggle:hover{ color:var(--accent); }
+  </style>
+</head>
+<body class="auth h-full">
+<div class="grid min-h-full lg:grid-cols-2">
+  {% include "partials/auth_brand.html" %}
+
+  <div class="flex items-center justify-center px-6 py-12">
+    <div class="authcard w-full max-w-sm reveal">
+      <a href="{% url 'index' %}" class="mb-8 flex items-center gap-2 lg:hidden">
+        {% include "partials/logo.html" with cls="h-7 w-7" %}
+        <span class="text-lg font-semibold">HemoHub</span>
+      </a>
+
+      <h1 class="h-display text-3xl">Sign in</h1>
+      <p class="mt-1.5 muted text-sm">Access your blood bank dashboard.</p>
+
+      {% if form.errors %}
+      <div class="mt-5 rounded-xl px-4 py-3 text-sm accent" style="border:1px solid var(--accent);background:var(--accent-soft)">
+        Incorrect username or password.
+      </div>
+      {% endif %}
+
+      <form method="post" class="mt-6">
+        {% csrf_token %}
+        <div class="field">
+          <label for="id_username">Username</label>
+          <input id="id_username" name="username" autofocus autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="id_password">Password</label>
+          <div class="pw-wrap">
+            <input id="id_password" name="password" type="password" autocomplete="current-password">
+            <button type="button" id="pw-toggle" class="pw-toggle" aria-label="Show password"></button>
+          </div>
+        </div>
+        <button class="btn mt-2 w-full">Sign in</button>
+      </form>
+
+      <p class="mt-6 text-sm muted">New here? <a href="{% url 'register' %}" class="accent font-medium hover:underline">Create an account</a></p>
+      <p class="mono mt-6 text-xs muted">demo · redcross / hemohub123</p>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var btn = document.getElementById('pw-toggle');
+    var inp = document.getElementById('id_password');
+    if (!btn || !inp) return;
+    var eye = '<svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S5.5 5.5 12 5.5 21.5 12 21.5 12 18.5 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+    var off = '<svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18M10.6 10.6a3 3 0 004.2 4.2M9.8 5.6A9.6 9.6 0 0112 5.5c6.5 0 9.5 6.5 9.5 6.5a15 15 0 01-2.9 3.7M6.1 6.7A15 15 0 002.5 12S5.5 18.5 12 18.5c1 0 1.9-.13 2.7-.37"/></svg>';
+    btn.innerHTML = eye;
+    btn.addEventListener('click', function () {
+      var show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.innerHTML = show ? off : eye;
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      inp.focus();
+    });
+  })();
+</script>
+</body>
+</html>

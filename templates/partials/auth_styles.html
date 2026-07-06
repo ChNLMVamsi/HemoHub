@@ -1,0 +1,50 @@
+{% comment %}Shared styling for the sign-in / sign-up pages (matches the landing design).{% endcomment %}
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F3F0; --panel:#FCFBF9; --ink:#191917; --muted:#6E6C66;
+    --rule:#E5E2DB; --rule-strong:#D8D4CB; --accent:#C8102E; --accent-deep:#8A0C20;
+    --accent-soft:rgba(200,16,46,.12);
+    --sh-md:0 8px 24px -12px rgba(25,25,23,.18), 0 3px 8px -4px rgba(25,25,23,.08);
+    --sh-lg:0 28px 56px -20px rgba(0,0,0,.45), 0 10px 24px -14px rgba(0,0,0,.3);
+  }
+  body.auth{ background:var(--paper); color:var(--ink);
+    font-family:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+  ::selection{ background:var(--accent); color:#fff; }
+  .mono{ font-family:'IBM Plex Mono',ui-monospace,'SFMono-Regular',monospace; }
+  .accent{ color:var(--accent); } .muted{ color:var(--muted); }
+  .rule{ border-color:var(--rule); }
+  .h-display{ font-weight:700; letter-spacing:-.025em; line-height:1.03; }
+  .tick{ font-variant-numeric:tabular-nums; letter-spacing:.03em; }
+  /* CTA */
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+    border-radius:11px; background:var(--accent); color:#fff; font-weight:500; font-size:.92rem;
+    padding:.75rem 1.15rem; box-shadow:0 1px 2px rgba(138,12,32,.35), 0 8px 18px -8px rgba(200,16,46,.5);
+    transition:background .18s ease, box-shadow .18s ease, transform .12s ease; }
+  .btn:hover{ background:var(--accent-deep); box-shadow:0 2px 4px rgba(138,12,32,.4), 0 12px 24px -8px rgba(200,16,46,.55); }
+  .btn:active{ transform:translateY(1px); }
+  /* blood-unit label */
+  .tag{ position:relative; background:#fff; color:var(--ink); border:1px solid var(--rule);
+    border-radius:16px; overflow:hidden; box-shadow:var(--sh-lg); }
+  .tag::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:5px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-deep)); }
+  .perf{ background-image:radial-gradient(circle, var(--rule) 1.4px, transparent 1.5px); background-size:10px 10px; height:10px; }
+  /* form fields */
+  .field{ margin-bottom:.8rem; }
+  .field > label{ display:block; font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:11px;
+    letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:.35rem; }
+  .authcard input, .authcard select{
+    width:100% !important; background:#fff !important; border:1px solid var(--rule) !important;
+    border-radius:10px !important; padding:.62rem .8rem !important; font-size:.92rem !important;
+    color:var(--ink) !important; box-shadow:none !important;
+    transition:border-color .15s ease, box-shadow .15s ease; }
+  .authcard input:focus, .authcard select:focus{
+    outline:none !important; border-color:var(--accent) !important;
+    box-shadow:0 0 0 3px var(--accent-soft) !important; }
+  a:focus-visible, button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }
+  @media (prefers-reduced-motion:no-preference){
+    .reveal{ opacity:0; transform:translateY(10px); animation:rise .5s cubic-bezier(.2,.7,.2,1) forwards; }
+    @keyframes rise{ to{ opacity:1; transform:none } }
+  }
+</style>

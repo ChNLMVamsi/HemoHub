@@ -1,0 +1,41 @@
+{% comment %}Left brand panel for auth pages — reuses the blood-unit label signature.{% endcomment %}
+<div class="relative hidden overflow-hidden bg-[#191917] p-12 text-white lg:flex lg:flex-col lg:justify-between">
+  <a href="{% url 'index' %}" class="flex items-center gap-2">
+    {% include "partials/logo.html" with cls="h-7 w-7" %}
+    <span class="text-lg font-semibold">HemoHub</span>
+  </a>
+  <div>
+    <h2 class="h-display text-4xl">Every bag<br>has a clock.</h2>
+    <p class="mt-4 max-w-sm leading-relaxed text-white/60">Track the expiry on every unit, catch what's about to turn, and move it to a bank that can use it in time.</p>
+    <div class="tag mt-9 w-72">
+      <div class="flex items-center justify-between px-4 pt-3">
+        <span class="mono text-[10px] uppercase tracking-[0.2em] muted">Blood unit · #4471</span>
+        <span class="h-2 w-2 rounded-full" style="background:var(--accent)"></span>
+      </div>
+      <div class="flex items-end gap-3 px-4 pb-1 pt-1">
+        <span class="mono text-4xl font-semibold leading-none">O−</span>
+        <span class="mono mb-1 text-xs muted">Platelets<br>250 ml</span>
+      </div>
+      <div class="perf mx-4 my-2"></div>
+      <div class="flex items-center justify-between px-4 pb-3">
+        <span class="mono text-[10px] uppercase tracking-widest muted">Expires in</span>
+        <span id="countdown" class="mono tick text-sm font-semibold accent">04:11:58</span>
+      </div>
+    </div>
+  </div>
+  <p class="mono text-xs text-white/40">Django · Channels · Celery · Redis · PostgreSQL</p>
+</div>
+<script>
+  (function () {
+    var el = document.getElementById('countdown');
+    if (!el) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var secs = 4*3600 + 11*60 + 58;
+    function pad(n){ return String(n).padStart(2,'0'); }
+    setInterval(function(){
+      secs = secs > 0 ? secs - 1 : 4*3600 + 11*60 + 58;
+      var h=Math.floor(secs/3600), m=Math.floor((secs%3600)/60), s=secs%60;
+      el.textContent = pad(h)+':'+pad(m)+':'+pad(s);
+    }, 1000);
+  })();
+</script>

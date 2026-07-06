@@ -1,0 +1,16 @@
+{% comment %} params: title, text(optional), action_url(optional), action_label(optional), variant(inbox|check|drop) {% endcomment %}
+<div class="px-6 py-12 text-center">
+  <div class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full
+    {% if variant == 'check' %}bg-emerald-50 text-emerald-500{% else %}bg-slate-100 text-slate-400{% endif %}">
+    {% if variant == 'check' %}
+      <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    {% elif variant == 'drop' %}
+      <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3s6 6.5 6 11a6 6 0 11-12 0c0-4.5 6-11 6-11z"/></svg>
+    {% else %}
+      <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-2.5 5a2 2 0 01-1.8 1.1H8.3A2 2 0 016.5 18L4 13m16 0h-5l-1 2h-4l-1-2H4"/></svg>
+    {% endif %}
+  </div>
+  <p class="text-sm font-medium text-slate-700">{{ title }}</p>
+  {% if text %}<p class="mt-1 text-sm text-slate-500">{{ text }}</p>{% endif %}
+  {% if action_url %}<a href="{{ action_url }}" class="mt-4 inline-block rounded-lg bg-crimson px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-crimson-700">{{ action_label }}</a>{% endif %}
+</div>

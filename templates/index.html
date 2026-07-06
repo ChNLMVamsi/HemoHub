@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  {% include "_head.html" %}
+  <title>HemoHub — every bag has a clock</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --paper:#F4F3F0; --panel:#FCFBF9; --ink:#191917; --muted:#6E6C66;
+      --rule:#E5E2DB; --rule-strong:#D8D4CB; --accent:#C8102E; --accent-deep:#8A0C20;
+      --accent-soft:rgba(200,16,46,.07);
+      --sh-sm:0 1px 2px rgba(25,25,23,.04), 0 2px 5px rgba(25,25,23,.03);
+      --sh-md:0 8px 24px -12px rgba(25,25,23,.18), 0 3px 8px -4px rgba(25,25,23,.08);
+      --sh-lg:0 28px 56px -20px rgba(25,25,23,.30), 0 10px 24px -14px rgba(25,25,23,.16);
+    }
+    body.landing{ background:var(--paper); color:var(--ink);
+      font-family:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif;
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+    ::selection{ background:var(--accent); color:#fff; }
+    .mono{ font-family:'IBM Plex Mono',ui-monospace,'SFMono-Regular',monospace; }
+    .accent{ color:var(--accent); } .bg-accent{ background:var(--accent); }
+    .muted{ color:var(--muted); }
+    .rule{ border-color:var(--rule); }
+    .panel{ background:var(--panel); border:1px solid var(--rule); }
+    .card{ background:var(--panel); border:1px solid var(--rule); border-radius:14px; box-shadow:var(--sh-sm); }
+    .shadow-photo{ box-shadow:var(--sh-md); }
+    .lift{ transition:transform .22s cubic-bezier(.2,.7,.2,1), box-shadow .22s ease, border-color .22s ease; }
+    .lift:hover{ transform:translateY(-3px); box-shadow:var(--sh-md); border-color:var(--rule-strong); }
+    .h-display{ font-weight:700; letter-spacing:-.025em; line-height:1.02; }
+    .tick{ font-variant-numeric:tabular-nums; letter-spacing:.03em; }
+    /* CTA */
+    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+      border-radius:11px; background:var(--accent); color:#fff; font-weight:500; font-size:.9rem;
+      padding:.72rem 1.15rem; box-shadow:0 1px 2px rgba(138,12,32,.35), 0 8px 18px -8px rgba(200,16,46,.5);
+      transition:background .18s ease, box-shadow .18s ease, transform .12s ease; }
+    .btn:hover{ background:var(--accent-deep); box-shadow:0 2px 4px rgba(138,12,32,.4), 0 12px 24px -8px rgba(200,16,46,.55); }
+    .btn:active{ transform:translateY(1px); }
+    .btn-sm{ padding:.5rem .9rem; font-size:.85rem; border-radius:9px; box-shadow:0 1px 2px rgba(138,12,32,.3), 0 6px 14px -8px rgba(200,16,46,.45); }
+    /* sticky translucent nav */
+    .site-nav{ position:sticky; top:0; z-index:40; border-bottom:1px solid var(--rule);
+      background:color-mix(in srgb, var(--paper) 82%, transparent); backdrop-filter:saturate(1.2) blur(10px);
+      -webkit-backdrop-filter:saturate(1.2) blur(10px); }
+    /* blood-unit label */
+    .tag{ position:relative; background:#fff; border:1px solid var(--rule); border-radius:16px; overflow:hidden; box-shadow:var(--sh-lg); }
+    .tag::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg,var(--accent),var(--accent-deep)); }
+    .perf{ background-image:radial-gradient(circle, var(--rule) 1.4px, transparent 1.5px); background-size:10px 10px; height:10px; }
+    /* data tokens */
+    .tok{ display:inline-flex; align-items:center; font-family:'IBM Plex Mono',ui-monospace,monospace;
+      font-size:12px; line-height:1; padding:5px 8px; border:1px solid var(--rule); border-radius:8px;
+      background:#fff; color:var(--ink); margin:0 6px 6px 0; }
+    a:focus-visible,button:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+    @media (prefers-reduced-motion:no-preference){
+      .reveal{ opacity:0; transform:translateY(12px); animation:rise .6s cubic-bezier(.2,.7,.2,1) forwards; }
+      .reveal.d1{ animation-delay:.06s } .reveal.d2{ animation-delay:.13s } .reveal.d3{ animation-delay:.2s }
+      @keyframes rise{ to{ opacity:1; transform:none } }
+    }
+  </style>
+</head>
+<body id="top" class="landing h-full antialiased">
+
+<!-- Nav -->
+<header class="site-nav">
+  <nav class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+    <a href="#top" class="flex items-center gap-2">
+      {% include "partials/logo.html" with cls="h-7 w-7" %}
+      <span class="text-lg font-semibold tracking-tight">HemoHub</span>
+    </a>
+    <div class="mono hidden items-center gap-7 text-xs uppercase tracking-widest muted md:flex">
+      <a href="#how" class="hover:text-[color:var(--ink)]">Process</a>
+      <a href="#types" class="hover:text-[color:var(--ink)]">Compatibility</a>
+      <a href="#about" class="hover:text-[color:var(--ink)]">About</a>
+    </div>
+    <div class="flex items-center gap-4 text-sm">
+      <a href="{% url 'login' %}" class="hidden hover:text-[color:var(--accent)] sm:inline">Sign in</a>
+      <a href="{% url 'register' %}" class="btn btn-sm">Register</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <!-- Hero -->
+  <section class="mx-auto grid max-w-5xl items-center gap-12 px-6 py-16 lg:grid-cols-[1.05fr_.95fr] lg:py-24">
+    <div>
+      <p class="reveal mono text-xs uppercase tracking-[0.2em] muted">Blood inventory · transfer network</p>
+      <h1 class="reveal d1 h-display mt-5 text-5xl sm:text-6xl">Every bag<br>has a clock.</h1>
+      <p class="reveal d2 mt-6 max-w-md text-lg leading-relaxed muted">Platelets last days, red cells weeks, plasma months. HemoHub watches the expiry date on every unit, warns you before one turns, and lets another bank claim it while it can still save someone.</p>
+      <div class="reveal d3 mt-8 flex items-center gap-6">
+        <a href="{% url 'register' %}" class="btn">Register your blood bank</a>
+        <a href="{% url 'login' %}" class="text-sm font-medium underline decoration-2 underline-offset-4 hover:text-[color:var(--accent)]">Sign in</a>
+      </div>
+      <p class="mono mt-5 text-xs muted">demo · <span class="accent">redcross</span> / hemohub123</p>
+    </div>
+
+    <!-- Signature: a live blood-unit label over the photo -->
+    <div class="relative">
+      <div class="overflow-hidden rounded-2xl shadow-photo" style="border:1px solid var(--rule)">
+        <img src="https://images.unsplash.com/photo-1536856136534-bb679c52a9aa?auto=format&amp;fit=crop&amp;w=1200&amp;q=80"
+             alt="A donor giving blood at a clinic" loading="eager" decoding="async"
+             class="h-72 w-full object-cover sm:h-96">
+      </div>
+      <div class="tag absolute -bottom-8 -left-2 w-72 shadow-xl sm:-left-6">
+        <div class="flex items-center justify-between px-4 pt-3">
+          <span class="mono text-[10px] uppercase tracking-[0.2em] muted">Blood unit · #4471</span>
+          <span class="h-2 w-2 rounded-full bg-accent"></span>
+        </div>
+        <div class="flex items-end gap-3 px-4 pb-1 pt-1">
+          <span class="mono text-4xl font-semibold leading-none">O−</span>
+          <span class="mono mb-1 text-xs muted">Platelets<br>250 ml</span>
+        </div>
+        <div class="perf mx-4 my-2"></div>
+        <div class="flex items-center justify-between px-4 pb-3">
+          <span class="mono text-[10px] uppercase tracking-widest muted">Expires in</span>
+          <span id="countdown" class="mono tick text-sm font-semibold accent">04:11:58</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem statement (editorial pull line) -->
+  <section class="border-y rule" style="background:var(--panel)">
+    <div class="mx-auto max-w-5xl px-6 py-12">
+      <p class="max-w-3xl text-2xl leading-snug sm:text-3xl">A single blood bank can throw away hundreds of usable units a year — not for lack of demand, but because no one saw the clock run out.
+        <span class="accent">HemoHub makes the clock impossible to miss.</span></p>
+    </div>
+  </section>
+
+  <!-- Process (a real sequence, so it's numbered — but set as a flow, not cards) -->
+  <section id="how" class="mx-auto max-w-5xl scroll-mt-16 px-6 py-16">
+    <h2 class="h-display text-3xl">From full fridge to zero waste</h2>
+    <div class="mt-10 grid gap-px overflow-hidden rounded-2xl md:grid-cols-3" style="background:var(--rule)">
+      <div class="panel p-7">
+        <span class="mono text-xs tracking-widest accent">01 — LOG</span>
+        <h3 class="mt-3 text-lg font-semibold">Record every unit</h3>
+        <p class="mt-2 text-sm leading-relaxed muted">Enter each bag with its component and collection date. The expiry window is worked out for you.</p>
+      </div>
+      <div class="panel p-7">
+        <span class="mono text-xs tracking-widest accent">02 — DETECT</span>
+        <h3 class="mt-3 text-lg font-semibold">Catch it early</h3>
+        <p class="mt-2 text-sm leading-relaxed muted">A daily sweep surfaces anything within seven days of turning, ranked by how little time is left.</p>
+      </div>
+      <div class="panel p-7">
+        <span class="mono text-xs tracking-widest accent">03 — TRANSFER</span>
+        <h3 class="mt-3 text-lg font-semibold">Move it, don't bin it</h3>
+        <p class="mt-2 text-sm leading-relaxed muted">List an at-risk unit and a nearby bank claims it in a click — it lands in their inventory, live.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Compatibility as self-contained per-type cards -->
+  <section id="types" class="scroll-mt-16 border-y rule" style="background:var(--panel)">
+    <div class="mx-auto max-w-5xl px-6 py-16">
+      <h2 class="h-display text-3xl">Who can give to whom</h2>
+      <p class="mt-2 muted">Find a blood type — everything it can give and receive is on its own card.</p>
+      <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="card p-5 lift" style="box-shadow:inset 0 3px 0 var(--accent)">
+          <div class="flex items-center justify-between gap-2">
+            <span class="mono text-2xl font-semibold accent">O−</span>
+            <span class="mono rounded-md px-2 py-0.5 text-[9px] uppercase tracking-wide" style="background:rgba(200,16,46,.08);color:var(--accent)">universal donor</span>
+          </div>
+          <div class="mt-4"><div class="mono text-[10px] uppercase tracking-widest muted">↗ Gives to</div><div class="mt-1.5"><span class="text-sm italic muted">everyone</span></div></div>
+          <div class="mt-3 border-t rule pt-3"><div class="mono text-[10px] uppercase tracking-widest muted">↙ Gets from</div><div class="mt-1.5 flex flex-wrap"><span class="tok">O−</span></div></div>
+        </div>
+        <div class="card p-5 lift">
+          <div class="flex items-center justify-between gap-2">
+            <span class="mono text-2xl font-semibold">O+</span>
+            
+          </div>
+          <div class="mt-4"><div class="mono text-[10px] uppercase tracking-widest muted">↗ Gives to</div><div class="mt-1.5 flex flex-wrap"><span class="tok">O+</span><span class="tok">A+</span><span class="tok">B+</span><span class="tok">AB+</span></div></div>
+          <div class="mt-3 border-t rule pt-3"><div class="mono text-[10px] uppercase tracking-widest muted">↙ Gets from</div><div class="mt-1.5 flex flex-wrap"><span class="tok">O+</span><span class="tok">O−</span></div></div>
+        </div>
+        <div class="card p-5 lift">
+          <div class="flex items-center justify-between gap-2">
+            <span class="mono text-2xl font-semibold">A−</span>
+            
+          </div>
+          <div class="mt-4"><div class="mono text-[10px] uppercase tracking-widest muted">↗ Gives to</div><div class="mt-1.5 flex flex-wrap"><span class="tok">A±</span><span class="tok">AB±</span></div></div>
+          <div class="mt-3 border-t rule pt-3"><div class="mono text-[10px] uppercase tracking-widest muted">↙ Gets from</div><div class="mt-1.5 flex flex-wrap"><span class="tok">A−</span><span class="tok">O−</span></div></div>
+        </div>
+        <div class="card p-5 lift">
+          <div class="flex items-center justify-between gap-2">
+            <span class="mono text-2xl font-semibold">A+</span>
+            
+          </div>
+          <div class="mt-4"><div class="mono text-[10px] uppercase tracking-widest muted">↗ Gives to</div><div class="mt-1.5 flex flex-wrap"><span class="tok">A+</span><span class="tok">AB+</span></div></div>
+          <div class="mt-3 border-t rule pt-3"><div class="mono text-[10px] uppercase tracking-widest muted">↙ Gets from</div><div class="mt-1.5 flex flex-wrap"><span class="tok">A+</span><span class="tok">A−</span><span class="tok">O+</span><span class="tok">O−</span></div></div>
+        </div>
+        <div class="card p-5 lift">
+          <div class="flex items-center justify-between gap-2">
+            <span class="mono text-2xl font-semibold">B−</span>
+            
+          </div>
+          <div class="mt-4"><div class="mono text-[10px] uppercase tracking-widest muted">↗ Gives to</div><div class="mt-1.5 flex flex-wrap"><span class="tok">B±</span><span class="tok">AB±</span></div></div>
+          <div class="mt-3 border-t rule pt-3"><div class="mono text-[10px] uppercase tracking-widest muted">↙ Gets from</div><div class="mt-1.5 flex flex-wrap"><span class="tok">B−</span><span class="tok">O−</span></div></div>
+        </div>
+        <div class="card p-5 lift">
+          <div class="flex items-center justify-between gap-2">
+            <span class="mono text-2xl font-semibold">B+</span>
+            
+          </div>
+          <div class="mt-4"><div class="mono text-[10px] uppercase tracking-widest muted">↗ Gives to</div><div class="mt-1.5 flex flex-wrap"><span class="tok">B+</span><span class="tok">AB+</span></div></div>
+          <div class="mt-3 border-t rule pt-3"><div class="mono text-[10px] uppercase tracking-widest muted">↙ Gets from</div><div class="mt-1.5 flex flex-wrap"><span class="tok">B+</span><span class="tok">B−</span><span class="tok">O+</span><span class="tok">O−</span></div></div>
+        </div>
+        <div class="card p-5 lift">
+          <div class="flex items-center justify-between gap-2">
+            <span class="mono text-2xl font-semibold">AB−</span>
+            
+          </div>
+          <div class="mt-4"><div class="mono text-[10px] uppercase tracking-widest muted">↗ Gives to</div><div class="mt-1.5 flex flex-wrap"><span class="tok">AB±</span></div></div>
+          <div class="mt-3 border-t rule pt-3"><div class="mono text-[10px] uppercase tracking-widest muted">↙ Gets from</div><div class="mt-1.5 flex flex-wrap"><span class="tok">AB−</span><span class="tok">A−</span><span class="tok">B−</span><span class="tok">O−</span></div></div>
+        </div>
+        <div class="card p-5 lift" style="box-shadow:inset 0 3px 0 var(--accent)">
+          <div class="flex items-center justify-between gap-2">
+            <span class="mono text-2xl font-semibold accent">AB+</span>
+            <span class="mono rounded-md px-2 py-0.5 text-[9px] uppercase tracking-wide" style="background:rgba(200,16,46,.08);color:var(--accent)">universal recipient</span>
+          </div>
+          <div class="mt-4"><div class="mono text-[10px] uppercase tracking-widest muted">↗ Gives to</div><div class="mt-1.5 flex flex-wrap"><span class="tok">AB+</span></div></div>
+          <div class="mt-3 border-t rule pt-3"><div class="mono text-[10px] uppercase tracking-widest muted">↙ Gets from</div><div class="mt-1.5"><span class="text-sm italic muted">everyone</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="mx-auto max-w-5xl scroll-mt-16 px-6 py-16">
+    <div class="grid items-center gap-12 lg:grid-cols-2">
+      <div>
+        <h2 class="h-display text-3xl">Built for the people minding the fridge</h2>
+        <p class="mt-4 leading-relaxed muted">HemoHub gives every bank a live read on its own shelf life and a shared network to hand off units it can't use in time. Each bank sees only its own stock; new listings arrive the moment they're posted; and when a unit is claimed, it moves — no phone calls, no spreadsheets.</p>
+        <dl class="mono mt-7 grid grid-cols-3 gap-6 text-center">
+          <div><dt class="text-2xl font-semibold">8</dt><dd class="mt-1 text-xs uppercase tracking-widest muted">groups</dd></div>
+          <div><dt class="text-2xl font-semibold">4</dt><dd class="mt-1 text-xs uppercase tracking-widest muted">components</dd></div>
+          <div><dt class="text-2xl font-semibold">7d</dt><dd class="mt-1 text-xs uppercase tracking-widest muted">early warning</dd></div>
+        </dl>
+        <a href="{% url 'register' %}" class="btn mt-8">Start free</a>
+      </div>
+      <div class="overflow-hidden rounded-2xl shadow-photo" style="border:1px solid var(--rule)">
+        <img src="https://images.unsplash.com/photo-1697192156499-d85cfe1452c0?auto=format&amp;fit=crop&amp;w=1000&amp;q=80"
+             alt="A gloved hand holding a labelled blood sample" loading="lazy" decoding="async"
+             class="h-80 w-full object-cover">
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="border-t rule">
+  <div class="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex items-center gap-2">
+      {% include "partials/logo.html" with cls="h-6 w-6" %}
+      <span class="font-semibold">HemoHub</span>
+    </div>
+    <p class="mono text-xs muted">Django · Channels · Celery · Redis · PostgreSQL</p>
+    <div class="flex gap-6 text-sm muted">
+      <a href="#how" class="hover:text-[color:var(--ink)]">Process</a>
+      <a href="#types" class="hover:text-[color:var(--ink)]">Compatibility</a>
+      <a href="{% url 'login' %}" class="hover:text-[color:var(--ink)]">Sign in</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // The clock in the label actually ticks — the one moment of motion, and it's the whole thesis.
+  (function () {
+    const el = document.getElementById('countdown');
+    if (!el) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let secs = 4 * 3600 + 11 * 60 + 58;
+    function pad(n){ return String(n).padStart(2, '0'); }
+    function render(){
+      const h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
+      el.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+    render();
+    if (reduce) return;
+    setInterval(() => { secs = secs > 0 ? secs - 1 : 4 * 3600 + 11 * 60 + 58; render(); }, 1000);
+  })();
+</script>
+</body>
+</html>

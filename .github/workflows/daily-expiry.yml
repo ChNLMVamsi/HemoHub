@@ -1,0 +1,14 @@
+name: Daily expiry sweep
+on:
+  schedule:
+    - cron: "30 19 * * *"      # 01:00 IST daily (19:30 UTC)
+  workflow_dispatch: {}         # allow manual runs
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger expiry sweep
+        run: |
+          curl -fsS -X GET "${{ secrets.HEMOHUB_URL }}/api/cron/expire/" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
