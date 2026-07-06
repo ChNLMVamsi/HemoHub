@@ -11,6 +11,8 @@ urlpatterns = [
     path("dashboard/", views.dashboard, name="dashboard"),
 
     path("inventory/", views.inventory, name="inventory"),
+    path("inventory/import/", views.import_units, name="import_units"),
+    path("inventory/import/template/", views.import_template, name="import_template"),
     path("inventory/<int:pk>/discard/", views.discard_unit, name="discard_unit"),
     path("inventory/<int:pk>/broadcast/", views.broadcast_unit, name="broadcast_unit"),
 
@@ -18,6 +20,8 @@ urlpatterns = [
     path("network/<int:pk>/claim/", views.claim_alert, name="claim_alert"),
 
     path("profile/", views.profile, name="profile"),
+
+    path("oversight/", views.oversight, name="oversight"),
 
     path("api/alerts/count/", views.alerts_count, name="alerts_count"),
     path("api/cron/expire/", views.cron_expire, name="cron_expire"),

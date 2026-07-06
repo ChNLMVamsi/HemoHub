@@ -7,9 +7,10 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -20,8 +21,11 @@ from .services import push_network_event, run_expiry_sweep
 
 # ---------------------------------------------------------------- public
 def index(request):
-    if request.user.is_authenticated and _get_bank(request.user) is not None:
-        return redirect("dashboard")
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect("oversight")
+        if _get_bank(request.user) is not None:
+            return redirect("dashboard")
     return render(request, "index.html")
 
 
@@ -41,6 +45,15 @@ def register(request):
 class HemoLoginView(LoginView):
     template_name = "login.html"
     redirect_authenticated_user = True
+
+    def get_success_url(self):
+        """Route each account to the right home after login."""
+        user = self.request.user
+        if user.is_superuser:
+            return reverse("oversight")
+        if _get_bank(user) is not None:
+            return reverse("dashboard")
+        return reverse("index")
 
 
 # ---------------------------------------------------------------- helpers
@@ -67,6 +80,17 @@ def bank_required(view):
     def _wrapped(request, *args, **kwargs):
         if _get_bank(request.user) is None:
             messages.info(request, "That account isn't a blood bank — manage it at /admin.")
+            return redirect("index")
+        return view(request, *args, **kwargs)
+    return _wrapped
+
+
+def superuser_required(view):
+    """Restrict a view to platform admins (superusers)."""
+    @wraps(view)
+    @login_required
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_superuser:
             return redirect("index")
         return view(request, *args, **kwargs)
     return _wrapped
@@ -310,6 +334,47 @@ def alerts_count(request):
     bank = _bank(request)
     n = TransferAlert.objects.filter(status="OPEN").exclude(from_bank=bank).count()
     return JsonResponse({"open_alerts": n})
+
+
+@superuser_required
+def oversight(request):
+    """Platform-wide admin dashboard: banks, stock, wastage prevention, activity."""
+    today = timezone.localdate()
+    available = BloodUnit.objects.filter(is_available=True)
+    soon = available.filter(expiry_date__gte=today, expiry_date__lte=today + timedelta(days=7))
+    expired_in_stock = available.filter(expiry_date__lt=today)
+
+    alerts = TransferAlert.objects.all()
+    completed = alerts.filter(status="CLAIMED")          # units rescued from wastage
+    open_alerts = alerts.filter(status="OPEN")
+    lapsed = alerts.filter(status="EXPIRED")             # listed but expired unclaimed
+
+    by_type = (available.values("blood_type")
+                        .annotate(units=Count("id"), volume=Sum("quantity_ml"))
+                        .order_by("blood_type"))
+
+    banks = (BloodBank.objects.annotate(
+                unit_count=Count("units", filter=Q(units__is_available=True)),
+                volume=Sum("units__quantity_ml", filter=Q(units__is_available=True)))
+             .order_by("-unit_count"))
+
+    recent = (alerts.select_related("unit", "from_bank", "claimed_by")
+                    .order_by("-created_at")[:8])
+
+    ctx = {
+        "total_banks": BloodBank.objects.count(),
+        "total_units": available.count(),
+        "total_volume": available.aggregate(v=Sum("quantity_ml"))["v"] or 0,
+        "soon_count": soon.count(),
+        "expired_count": expired_in_stock.count(),
+        "completed_count": completed.count(),
+        "open_count": open_alerts.count(),
+        "lapsed_count": lapsed.count(),
+        "by_type": by_type,
+        "banks": banks,
+        "recent": recent,
+    }
+    return render(request, "oversight.html", ctx)
 
 
 def cron_expire(request):
