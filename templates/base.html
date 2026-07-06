@@ -16,7 +16,7 @@
       {% url 'inventory' as u %}<a href="{{ u }}" class="flex items-center rounded-lg px-3 py-2 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">Inventory</a>
       {% url 'network' as u %}<a href="{{ u }}" class="flex items-center justify-between rounded-lg px-3 py-2 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">
         <span>Notifications</span>
-        <span id="net-badge" class="{% if open_alerts %}inline-flex{% else %}hidden{% endif %} min-w-5 items-center justify-center rounded-full bg-crimson px-1.5 text-xs font-semibold text-white">{{ open_alerts }}</span>
+        <span id="net-badge" class="net-badge {% if open_alerts %}inline-flex{% else %}hidden{% endif %} min-w-5 items-center justify-center rounded-full bg-crimson px-1.5 text-xs font-semibold text-white">{{ open_alerts }}</span>
       </a>
       {% url 'profile' as u %}<a href="{{ u }}" class="flex items-center rounded-lg px-3 py-2 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">Profile</a>
     </nav>
@@ -72,6 +72,33 @@
       </aside>
     </div>
 
+    <!-- Desktop top bar -->
+    <header class="hidden items-center justify-between border-b border-slate-200 bg-white px-6 py-3 md:flex">
+      <div class="min-w-0">
+        <div class="truncate text-sm font-semibold text-ink">{{ request.user.bloodbank.name }}</div>
+        <div class="text-xs text-slate-400">{{ request.user.bloodbank.city|default:"Blood bank" }}</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="{% url 'network' %}" class="relative rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-ink" aria-label="Notifications">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <span class="net-badge {% if open_alerts %}inline-flex{% else %}hidden{% endif %} absolute -right-0.5 -top-0.5 min-w-4 items-center justify-center rounded-full bg-crimson px-1 text-[10px] font-semibold text-white">{{ open_alerts }}</span>
+        </a>
+        <div class="relative">
+          <button id="acct-btn" class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 transition-colors hover:bg-slate-100">
+            <span class="grid h-7 w-7 place-items-center rounded-full bg-ink text-xs font-semibold uppercase text-white">{{ request.user.username|slice:":1" }}</span>
+            <span class="hidden sm:inline">{{ request.user.username }}</span>
+            <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div id="acct-menu" class="absolute right-0 z-30 mt-2 hidden w-44 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+            <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Profile</a>
+            <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+              <button class="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50">Sign out</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </header>
+
     <main id="app-main" class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
       {% if messages %}
         <div class="mb-5 space-y-2">
@@ -97,11 +124,11 @@
     try {
       const r = await fetch("{% url 'alerts_count' %}");
       const { open_alerts } = await r.json();
-      const b = document.getElementById('net-badge');
-      if (!b) return;
-      b.textContent = open_alerts;
-      b.classList.toggle('hidden', !open_alerts);
-      b.classList.toggle('inline-flex', !!open_alerts);
+      document.querySelectorAll('.net-badge').forEach(b => {
+        b.textContent = open_alerts;
+        b.classList.toggle('hidden', !open_alerts);
+        b.classList.toggle('inline-flex', !!open_alerts);
+      });
     } catch (e) {}
   }
 
@@ -160,6 +187,14 @@
   if (openBtn) openBtn.addEventListener('click', () => drawer.classList.remove('hidden'));
   closeEls.forEach(el => el && el.addEventListener('click', () => drawer.classList.add('hidden')));
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && drawer) drawer.classList.add('hidden'); });
+
+  // Account dropdown (top bar)
+  const acctBtn = document.getElementById('acct-btn');
+  const acctMenu = document.getElementById('acct-menu');
+  if (acctBtn && acctMenu) {
+    acctBtn.addEventListener('click', (e) => { e.stopPropagation(); acctMenu.classList.toggle('hidden'); });
+    document.addEventListener('click', () => acctMenu.classList.add('hidden'));
+  }
 </script>
 </body>
 </html>
