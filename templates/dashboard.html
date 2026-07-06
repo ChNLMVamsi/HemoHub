@@ -24,10 +24,11 @@
     <div class="tnum mt-2 font-display text-3xl font-semibold {% if soon_count %}text-amber-700{% else %}text-ink{% endif %}">{{ soon_count }}</div>
   </div>
   <div class="rounded-xl border p-5 {% if network_count %}border-crimson/30 bg-crimson/5{% else %}border-slate-200 bg-white{% endif %}">
-    <div class="text-xs font-medium uppercase tracking-wide {% if network_count %}text-crimson-700{% else %}text-slate-500{% endif %}">Network offers</div>
+    <div class="text-xs font-medium uppercase tracking-wide {% if network_count %}text-crimson-700{% else %}text-slate-500{% endif %}">Notifications</div>
     <div class="tnum mt-2 font-display text-3xl font-semibold {% if network_count %}text-crimson-700{% else %}text-ink{% endif %}">{{ network_count }}</div>
   </div>
 </div>
+
 
 <!-- Inventory health bar -->
 {% if total_units %}
@@ -50,7 +51,6 @@
   </div>
 </div>
 {% endif %}
-
 <div class="mt-6 grid gap-6 lg:grid-cols-3">
   <!-- Expiring soon -->
   <section class="lg:col-span-2 rounded-xl border border-slate-200 bg-white">
@@ -100,11 +100,11 @@
   </section>
 </div>
 
-<!-- Network offers -->
+<!-- Notifications -->
 {% if network %}
 <section class="mt-6 rounded-xl border border-crimson/20 bg-white">
   <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-    <h2 class="font-display font-semibold text-ink">Available on the network</h2>
+    <h2 class="font-display font-semibold text-ink">Available to claim</h2>
     <a href="{% url 'network' %}" class="text-sm text-crimson hover:underline">View all →</a>
   </div>
   <ul class="divide-y divide-slate-100">

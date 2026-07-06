@@ -249,7 +249,7 @@ def broadcast_unit(request, pk):
     bank = _bank(request)
     unit = get_object_or_404(BloodUnit, pk=pk, bank=bank, is_available=True)
     if unit.has_open_alert:
-        messages.info(request, "That unit is already on the network.")
+        messages.info(request, "That unit already has a notification out.")
     else:
         alert = TransferAlert.objects.create(
             unit=unit, from_bank=bank,
@@ -264,7 +264,7 @@ def broadcast_unit(request, pk):
             "component": unit.get_component_display(),
             "alert_id": alert.id,
         })
-        messages.success(request, "Unit broadcast to the network.")
+        messages.success(request, "Notification sent to other banks.")
     return redirect("inventory")
 
 
@@ -420,7 +420,7 @@ def oversight_delete_bank(request, pk):
 def oversight_broadcast(request, pk):
     unit = get_object_or_404(BloodUnit, pk=pk, is_available=True)
     if unit.has_open_alert:
-        messages.info(request, "That unit is already on the network.")
+        messages.info(request, "That unit already has a notification out.")
     else:
         alert = TransferAlert.objects.create(
             unit=unit, from_bank=unit.bank,
@@ -433,8 +433,8 @@ def oversight_broadcast(request, pk):
             "component": unit.get_component_display(), "alert_id": alert.id,
         })
         messages.success(request,
-            f"Broadcast {unit.bank.name}'s {unit.blood_type} "
-            f"{unit.get_component_display()} to the network.")
+            f"Notified other banks about {unit.bank.name}'s {unit.blood_type} "
+            f"{unit.get_component_display()}.")
     return redirect("oversight")
 
 

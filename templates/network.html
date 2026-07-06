@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Network · HemoHub{% endblock %}
+{% block title %}Notifications · HemoHub{% endblock %}
 {% block content %}
 <div class="mb-6">
-  <h1 class="font-display text-2xl font-semibold text-ink">Transfer network</h1>
+  <h1 class="font-display text-2xl font-semibold text-ink">Notifications</h1>
   <p class="text-sm text-slate-500">Expiring units other banks have listed — claim what you can use before it's wasted.</p>
 </div>
 
@@ -28,14 +28,14 @@
       {% endfor %}
     </ul>
     {% else %}
-    <div class="px-5 py-10 text-center text-sm text-slate-500">Nothing on the network right now.</div>
+    {% include "partials/empty.html" with variant="inbox" title="No notifications yet" text="When another bank lists an expiring unit, it shows up here in real time." %}
     {% endif %}
   </section>
 
   <!-- Outgoing -->
   <section class="rounded-xl border border-slate-200 bg-white">
     <div class="border-b border-slate-100 px-5 py-4">
-      <h2 class="font-display font-semibold text-ink">Your broadcasts</h2>
+      <h2 class="font-display font-semibold text-ink">Your notifications</h2>
     </div>
     {% if outgoing %}
     <ul class="divide-y divide-slate-100">
@@ -53,7 +53,7 @@
       {% endfor %}
     </ul>
     {% else %}
-    <div class="px-5 py-10 text-center text-sm text-slate-500">You haven't broadcast any units. Do it from <a href="{% url 'inventory' %}" class="text-crimson hover:underline">Inventory</a>.</div>
+    {% url 'inventory' as inv %}{% include "partials/empty.html" with variant="inbox" title="Nothing sent yet" text="Notify other banks about an expiring unit so someone can claim it." action_url=inv action_label="Go to inventory" %}
     {% endif %}
   </section>
 </div>

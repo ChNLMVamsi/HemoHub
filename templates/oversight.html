@@ -37,7 +37,7 @@
   <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
     <div>
       <h1 class="font-display text-2xl font-semibold text-ink">Platform overview</h1>
-      <p class="text-sm text-slate-500">Network-wide view across every blood bank.</p>
+      <p class="text-sm text-slate-500">A view across every blood bank.</p>
     </div>
     <div class="flex flex-wrap gap-2">
       <form method="post" action="{% url 'oversight_sweep' %}">{% csrf_token %}
@@ -95,7 +95,7 @@
   <section class="mt-6 rounded-xl border border-amber-200 bg-white">
     <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
       <h2 class="font-display font-semibold text-ink">Expiring soon — needs action</h2>
-      <span class="text-xs text-slate-500">not yet listed on the network</span>
+      <span class="text-xs text-slate-500">not yet notified</span>
     </div>
     <ul class="divide-y divide-slate-100">
       {% for u in needs_action %}
@@ -111,7 +111,7 @@
         <span class="tnum rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">{{ u.days_to_expiry }}d</span>
         {% endif %}
         <form method="post" action="{% url 'oversight_broadcast' u.pk %}">{% csrf_token %}
-          <button class="rounded-lg bg-crimson px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-crimson-700">Broadcast</button>
+          <button class="rounded-lg bg-crimson px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-crimson-700">Notify</button>
         </form>
       </li>
       {% endfor %}
@@ -120,9 +120,9 @@
   {% endif %}
 
   <div class="mt-6 grid gap-6 lg:grid-cols-3">
-    <!-- Stock by type (network) -->
+    <!-- Stock by type -->
     <section class="rounded-xl border border-slate-200 bg-white lg:col-span-1">
-      <div class="border-b border-slate-100 px-5 py-4"><h2 class="font-display font-semibold text-ink">Network stock by type</h2></div>
+      <div class="border-b border-slate-100 px-5 py-4"><h2 class="font-display font-semibold text-ink">Stock by type</h2></div>
       {% if by_type %}
       <ul class="divide-y divide-slate-100">
         {% for row in by_type %}
@@ -132,7 +132,7 @@
         </li>
         {% endfor %}
       </ul>
-      {% else %}<div class="px-5 py-10 text-center text-sm text-slate-500">No stock across the network yet.</div>{% endif %}
+      {% else %}<div class="px-5 py-10 text-center text-sm text-slate-500">No stock across the banks yet.</div>{% endif %}
     </section>
 
     <!-- Recent transfer activity -->
