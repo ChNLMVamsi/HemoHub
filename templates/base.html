@@ -9,8 +9,7 @@
   <!-- Sidebar -->
   <aside class="hidden md:flex md:w-64 md:flex-col bg-ink text-slate-300">
     <div class="flex items-center gap-2 px-6 py-5 border-b border-white/10">
-      <span class="grid h-8 w-8 place-items-center rounded-lg bg-crimson font-display font-bold text-white">H</span>
-      <span class="font-display text-lg font-semibold text-white">HemoHub</span>
+      {% include "partials/logo.html" with cls="h-9" %}
     </div>
     <nav class="flex-1 space-y-1 px-3 py-4 text-sm">
       {% url 'dashboard' as u %}<a href="{{ u }}" class="flex items-center rounded-lg px-3 py-2 {% if request.path == u %}bg-white/10 text-white{% else %}hover:bg-white/5{% endif %}">Dashboard</a>
@@ -37,8 +36,7 @@
     <!-- Mobile top bar -->
     <header class="flex items-center justify-between border-b border-slate-200 bg-ink px-4 py-3 text-white md:hidden">
       <div class="flex items-center gap-2">
-        <span class="grid h-7 w-7 place-items-center rounded-md bg-crimson font-display text-sm font-bold text-white">H</span>
-        <span class="font-display font-semibold">HemoHub</span>
+        {% include "partials/logo.html" with cls="h-8" %}
       </div>
       <button id="drawer-open" aria-label="Open menu" class="relative rounded-md p-1.5 hover:bg-white/10">
         <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
