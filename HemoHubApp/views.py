@@ -1,23 +1,26 @@
-from datetime import timedelta
+import csv
+import io
+from functools import wraps
+from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.db.models import Count, Sum
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import BankProfileForm, BloodUnitForm, SignupForm
-from .models import SHELF_LIFE_DAYS, BloodUnit, TransferAlert
+from .models import SHELF_LIFE_DAYS, BloodBank, BloodUnit, TransferAlert
 from .services import push_network_event, run_expiry_sweep
 
 
 # ---------------------------------------------------------------- public
 def index(request):
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and _get_bank(request.user) is not None:
         return redirect("dashboard")
     return render(request, "index.html")
 
@@ -45,8 +48,32 @@ def _bank(request):
     return request.user.bloodbank
 
 
+def _get_bank(user):
+    """Return the user's BloodBank, or None (e.g. for the admin superuser)."""
+    try:
+        return user.bloodbank
+    except BloodBank.DoesNotExist:
+        return None
+
+
+def bank_required(view):
+    """Like login_required, but also requires the account to be a blood bank.
+
+    Non-bank accounts (admin/superuser) are redirected instead of 500-ing when a
+    view reaches for request.user.bloodbank.
+    """
+    @wraps(view)
+    @login_required
+    def _wrapped(request, *args, **kwargs):
+        if _get_bank(request.user) is None:
+            messages.info(request, "That account isn't a blood bank — manage it at /admin.")
+            return redirect("index")
+        return view(request, *args, **kwargs)
+    return _wrapped
+
+
 # ---------------------------------------------------------------- dashboard
-@login_required
+@bank_required
 def dashboard(request):
     bank = _bank(request)
     today = timezone.localdate()
@@ -79,7 +106,7 @@ def dashboard(request):
 
 
 # ---------------------------------------------------------------- inventory
-@login_required
+@bank_required
 def inventory(request):
     bank = _bank(request)
     if request.method == "POST":
@@ -107,7 +134,7 @@ def inventory(request):
     })
 
 
-@login_required
+@bank_required
 @require_POST
 def discard_unit(request, pk):
     unit = get_object_or_404(BloodUnit, pk=pk, bank=_bank(request))
@@ -118,7 +145,80 @@ def discard_unit(request, pk):
     return redirect("inventory")
 
 
+_COMPONENT_LOOKUP = {
+    "whole": "WHOLE", "whole blood": "WHOLE",
+    "rbc": "RBC", "red cells": "RBC", "red blood cells": "RBC",
+    "plasma": "PLASMA",
+    "platelets": "PLATELETS", "platelet": "PLATELETS",
+}
+_VALID_TYPES = {"O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"}
+
+
+def _parse_date(value):
+    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(value.strip(), fmt).date()
+        except (ValueError, AttributeError):
+            continue
+    return None
+
+
+@bank_required
+@require_POST
+def import_units(request):
+    bank = _bank(request)
+    f = request.FILES.get("csv_file")
+    if not f or not f.name.lower().endswith(".csv"):
+        messages.error(request, "Please choose a .csv file.")
+        return redirect("inventory")
+
+    try:
+        rows = csv.DictReader(io.StringIO(f.read().decode("utf-8-sig")))
+    except UnicodeDecodeError:
+        messages.error(request, "Couldn't read that file — save it as UTF-8 CSV.")
+        return redirect("inventory")
+
+    created, skipped = [], 0
+    for row in rows:
+        row = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
+        blood_type = row.get("blood_type", "").upper()
+        component = _COMPONENT_LOOKUP.get(row.get("component", "").lower())
+        expiry = _parse_date(row.get("expiry_date", ""))
+        collected = _parse_date(row.get("collected_on", "")) or timezone.localdate()
+        if blood_type not in _VALID_TYPES or not component or not expiry:
+            skipped += 1
+            continue
+        try:
+            qty = int(float(row.get("quantity_ml", "450") or 450))
+        except ValueError:
+            qty = 450
+        created.append(BloodUnit(
+            bank=bank, donor_name=row.get("donor_name", ""),
+            blood_type=blood_type, component=component, quantity_ml=qty,
+            collected_on=collected, expiry_date=expiry,
+        ))
+
+    if created:
+        BloodUnit.objects.bulk_create(created)
+    msg = f"Imported {len(created)} unit{'s' if len(created) != 1 else ''}."
+    if skipped:
+        msg += f" Skipped {skipped} row{'s' if skipped != 1 else ''} with missing or invalid data."
+    (messages.success if created else messages.warning)(request, msg)
+    return redirect("inventory")
+
+
 @login_required
+def import_template(request):
+    resp = HttpResponse(content_type="text/csv")
+    resp["Content-Disposition"] = 'attachment; filename="hemohub_units_template.csv"'
+    w = csv.writer(resp)
+    w.writerow(["donor_name", "blood_type", "component", "quantity_ml",
+                "collected_on", "expiry_date"])
+    w.writerow(["Jane Doe", "O+", "RBC", "450", "2026-06-01", "2026-07-13"])
+    return resp
+
+
+@bank_required
 @require_POST
 def broadcast_unit(request, pk):
     bank = _bank(request)
@@ -144,7 +244,7 @@ def broadcast_unit(request, pk):
 
 
 # ---------------------------------------------------------------- network
-@login_required
+@bank_required
 def network(request):
     bank = _bank(request)
     incoming = (TransferAlert.objects.filter(status="OPEN")
@@ -157,7 +257,7 @@ def network(request):
     })
 
 
-@login_required
+@bank_required
 @require_POST
 def claim_alert(request, pk):
     bank = _bank(request)
@@ -183,7 +283,7 @@ def claim_alert(request, pk):
 
 
 # ---------------------------------------------------------------- profile
-@login_required
+@bank_required
 def profile(request):
     bank = _bank(request)
     if request.method == "POST":
@@ -204,7 +304,7 @@ def logout_view(request):
 
 
 # ---------------------------------------------------------------- json / cron
-@login_required
+@bank_required
 def alerts_count(request):
     """Polled by the nav to keep the network badge fresh without WebSockets."""
     bank = _bank(request)
